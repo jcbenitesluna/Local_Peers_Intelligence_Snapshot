@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credicorp · Banca Perú · Inteligencia Competitiva SBS</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Credicorp brand */
+  --bap:      #5AA6A1;
+  --bap-pink: #E94B87;
+  --bap-dark: #3D7A76;
+  --bap-pale: rgba(90,166,161,0.10);
+  --bap-pale2:rgba(90,166,161,0.06);
+
+  /* Banco brand colors */
+  --bcp:     #003087;  /* BCP azul */
+  --mibanco: #E4002B;  /* Mibanco rojo */
+  --bbva:    #004481;  /* BBVA azul marino */
+  --ibk:     #00A651;  /* Interbank verde */
+  --scot:    #EC1C24;  /* Scotiabank rojo */
+
+  /* UI */
+  --bg:    #E6E6E6;
+  --bg2:   #F2F2F2;
+  --bg3:   #FFFFFF;
+  --bg4:   #EAEAEA;
+  --text:  #1A1A2E;
+  --muted: #5A6478;
+  --dim:   #9AA3B0;
+  --border:#D0D0D0;
+  --border2:#E0E0E0;
+  --bear:  #D94F3D;
+  --bull:  #2BAE66;
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Libre Baskerville',Georgia,serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* HEADER */
+.header{background:var(--bcp);border-bottom:3px solid var(--bap-pink);position:sticky;top:0;z-index:100;}
+.hdr-inner{max-width:1480px;margin:0 auto;padding:0 1.5rem;height:56px;display:flex;align-items:center;gap:1.5rem;}
+.h-badge{background:var(--bap-pink);color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:4px 10px;border-radius:2px;letter-spacing:1.5px;text-transform:uppercase;}
+.h-title{font-size:13px;font-weight:700;color:#fff;letter-spacing:0.3px;}
+.h-sep{width:1px;height:20px;background:rgba(255,255,255,0.25);}
+.h-chips{display:flex;gap:8px;flex:1;overflow:hidden;}
+.hchip{font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:2px;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.70);white-space:nowrap;}
+.hchip b{color:#fff;}
+.hchip.pink{color:#FFC0D8;border-color:rgba(255,192,216,0.4);}
+.h-right{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.45);}
+
+/* NAV */
+.nav{background:var(--bg3);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-inner{max-width:1480px;margin:0 auto;padding:0 1.5rem;display:flex;}
+.ntab{padding:14px 18px;cursor:pointer;font-size:11px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;letter-spacing:.5px;text-transform:uppercase;font-family:'DM Mono',monospace;}
+.ntab:hover{color:var(--text);}
+.ntab.a{color:var(--bcp);border-bottom-color:var(--bap-pink);}
+
+/* MAIN */
+.main{max-width:1480px;margin:0 auto;padding:1.5rem;}
+.tp{display:none;}
+.tp.a{display:block;}
+
+/* SECTION LABEL */
+.sl{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin:2rem 0 1rem;display:flex;align-items:center;gap:10px;}
+.sl::after{content:'';flex:1;height:1px;background:var(--border2);}
+.sl span{color:var(--muted);}
+
+/* SOURCE NOTE */
+.src-note{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);padding:7px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;margin-bottom:1.2rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.src-note b{color:var(--bcp);}
+.src-note.warn{border-color:rgba(236,112,0,.3);background:rgba(236,112,0,.05);}
+.src-note.warn b{color:#B06800;}
+
+/* DATA AVAILABILITY */
+.avail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem;margin-bottom:1.2rem;}
+.avail-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:.8rem 1rem;display:flex;align-items:center;gap:10px;}
+.avail-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.avail-dot.green{background:#2BAE66;}
+.avail-dot.yellow{background:#F5A623;}
+.avail-dot.red{background:#D94F3D;}
+.avail-text{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.avail-text b{color:var(--text);}
+
+/* HERO CARDS - bancos Credicorp */
+.hero-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem;}
+@media(max-width:700px){.hero-row{grid-template-columns:1fr;}}
+.hero-card{padding:1.4rem 1.6rem;position:relative;overflow:hidden;}
+.hero-card.bcp-h{background:linear-gradient(135deg,var(--bcp) 0%,#001f5e 100%);}
+.hero-card.mib-h{background:linear-gradient(135deg,var(--mibanco) 0%,#8B0000 100%);}
+.hero-card::before{content:attr(data-name);position:absolute;right:1rem;top:50%;transform:translateY(-50%);font-size:72px;font-weight:700;color:rgba(255,255,255,0.05);font-family:'Libre Baskerville',serif;pointer-events:none;}
+.hero-tag{font-family:'DM Mono',monospace;font-size:9px;background:rgba(255,255,255,0.15);color:#fff;padding:3px 9px;border-radius:2px;display:inline-block;margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;}
+.hero-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+.hero-sub{font-size:11px;color:rgba(255,255,255,0.55);font-family:'DM Mono',monospace;margin-bottom:1rem;}
+.hero-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.1);border-radius:5px;overflow:hidden;}
+@media(max-width:500px){.hero-kpis{grid-template-columns:repeat(2,1fr);}}
+.hk{background:rgba(0,0,0,0.2);padding:.8rem .9rem;}
+.hk-l{font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.hk-v{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:#fff;line-height:1;}
+.hk-v sup{font-size:10px;color:rgba(255,255,255,0.5);}
+.hk-s{font-family:'DM Mono',monospace;font-size:9px;}
+.up{color:#80FFD8;} .nt{color:#FFD580;} .dn{color:#FF9090;}
+
+/* PEER CARDS */
+.peer-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem;}
+@media(max-width:800px){.peer-row{grid-template-columns:1fr;}}
+.peer-card{background:var(--bg3);padding:1.2rem 1.3rem;border-top:3px solid var(--border2);}
+.pc-bbva{border-top-color:var(--bbva);}
+.pc-ibk{border-top-color:var(--ibk);}
+.pc-scot{border-top-color:var(--scot);}
+.peer-sym{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;}
+.sym-bbva{color:var(--bbva);} .sym-ibk{color:var(--ibk);} .sym-scot{color:var(--scot);}
+.peer-name{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.peer-stats{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;}
+.ps-l{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);}
+.ps-v{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);}
+.ps-v.best{color:#1D7A47;font-weight:600;}
+.ps-v.warn{color:#D94F3D;}
+.ps-v.ok{color:#B06800;}
+
+/* CHART CARDS */
+.cr{display:grid;gap:1.2rem;margin-bottom:1.2rem;}
+.cr2{grid-template-columns:1fr 1fr;}
+.cr3{grid-template-columns:repeat(3,1fr);}
+.cr12{grid-template-columns:1fr 2fr;}
+@media(max-width:900px){.cr2,.cr3,.cr12{grid-template-columns:1fr;}}
+.cc{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1.3rem;}
+.cc.bcp-a{border-top:3px solid var(--bcp);}
+.cc.mib-a{border-top:3px solid var(--mibanco);}
+.cch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;}
+.cct{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;font-family:'DM Mono',monospace;}
+.ccs{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);margin-top:3px;}
+.badge{font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;border-radius:2px;letter-spacing:.5px;text-transform:uppercase;}
+.b-blue{background:rgba(0,48,135,.08);color:var(--bcp);border:1px solid rgba(0,48,135,.2);}
+.b-teal{background:rgba(90,166,161,.1);color:var(--bap-dark);border:1px solid rgba(90,166,161,.3);}
+.b-green{background:rgba(43,174,102,.08);color:#1D7A47;border:1px solid rgba(43,174,102,.2);}
+.b-gold{background:rgba(180,130,0,.08);color:#6B4C00;border:1px solid rgba(180,130,0,.2);}
+.b-red{background:rgba(228,0,43,.07);color:var(--mibanco);border:1px solid rgba(228,0,43,.2);}
+.chw{position:relative;}
+.h180{height:180px;} .h220{height:220px;} .h260{height:260px;} .h300{height:300px;} .h340{height:340px;}
+
+/* MATRIX */
+.mwrap{overflow-x:auto;}
+.mx{width:100%;border-collapse:collapse;font-size:12px;min-width:720px;}
+.mx th{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:8px 12px;border-bottom:1px solid var(--border);background:var(--bg4);font-weight:500;text-align:left;}
+.mx th.hbcp{color:var(--bcp);background:rgba(0,48,135,.05);border-left:3px solid var(--bcp);}
+.mx th.hmib{color:var(--mibanco);background:rgba(228,0,43,.04);}
+.mx th.hbbva{color:var(--bbva);}
+.mx th.hibk{color:var(--ibk);}
+.mx th.hscot{color:var(--scot);}
+.mx td{padding:8px 12px;border-bottom:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;}
+.mx td.bcp-col{background:rgba(0,48,135,.04);border-left:3px solid rgba(0,48,135,.2);color:var(--bcp)!important;font-weight:600;}
+.mx td.mib-col{background:rgba(228,0,43,.03);}
+.mx tr:hover td{background:var(--bg4);}
+.mx tr:hover td.bcp-col{background:rgba(0,48,135,.07);}
+.mx .sr td{background:var(--bg4);color:var(--dim);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;padding:5px 12px;font-weight:700;}
+.mx .mn{color:var(--text)!important;font-weight:500;}
+.best-c{color:#1D7A47!important;font-weight:600;}
+.warn-c{color:#D94F3D!important;}
+.ok-c{color:#B06800!important;}
+
+/* MONTH BADGES */
+.m-badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;text-transform:uppercase;letter-spacing:.5px;display:inline-block;}
+.m-dic{background:rgba(0,48,135,.08);color:var(--bcp);border:1px solid rgba(0,48,135,.2);}
+.m-ene{background:rgba(43,174,102,.08);color:#1D7A47;border:1px solid rgba(43,174,102,.2);}
+.m-nd{background:rgba(150,150,150,.1);color:var(--dim);border:1px solid var(--border2);}
+
+/* RANKING */
+.rank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.2rem;}
+.rank-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;display:flex;align-items:center;gap:12px;}
+.rank-n{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--dim);min-width:32px;text-align:center;line-height:1;}
+.rank-info{flex:1;}
+.rank-bank{font-family:'DM Mono',monospace;font-size:11px;font-weight:600;margin-bottom:2px;}
+.rank-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--text);}
+.rank-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);}
+.rank-card.r1{border-top:3px solid #F5C842;}
+.rank-card.r2{border-top:3px solid #C0C0C0;}
+.rank-card.r3{border-top:3px solid #CD7F32;}
+
+/* LEGEND */
+.leg{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;}
+.li{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.ld{width:8px;height:8px;border-radius:50%;}
+.ld.sq{border-radius:2px;}
+
+/* NOTA METODOLOGICA */
+.nota-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;margin-top:1.5rem;}
+.nota-title{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.5px;}
+.nota-body{font-size:11px;color:var(--dim);line-height:1.7;}
+.nota-body b{color:var(--text);}
+
+/* FOOTER */
+.footer{max-width:1480px;margin:0 auto;padding:1rem 1.5rem 2rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.cc,.hero-row,.peer-row,.rank-card{animation:fadeUp .3s ease both;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="hdr-inner">
+    <div class="h-badge">SBS</div>
+    <div class="h-title">Credicorp · Banca Perú · Inteligencia Competitiva</div>
+    <div class="h-sep"></div>
+    <div class="h-chips">
+      <span class="hchip pink">BCP · Mibanco vs <b>BBVA · Interbank · Scotiabank</b></span>
+      <span class="hchip">Fuente: <b>SBS · Dic 2025 + Ene 2026</b></span>
+      <span class="hchip">Sistema Banca Múltiple Perú</span>
+    </div>
+    <div class="h-right">sbs.gob.pe · Mar 2026</div>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="ntab a" data-tab="overview">Overview</div>
+    <div class="ntab" data-tab="financials">Financieros SBS</div>
+    <div class="ntab" data-tab="calidad">Calidad Cartera</div>
+    <div class="ntab" data-tab="mercado">Market Share</div>
+    <div class="ntab" data-tab="notas">Notas Metodológicas</div>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="tp a" id="panel-overview">
+
+  <div class="src-note">
+    📊 <span><b>Fuente única: SBS (sbs.gob.pe)</b> · Estadísticas de Banca Múltiple · <b>Diciembre 2025</b> (último cierre anual verificado) y <b>Enero 2026</b> (utilidades parciales disponibles) · La SBS publica con rezago de ~45 días — datos de Febrero 2026 aún no disponibles.</span>
+  </div>
+
+  <div class="avail-grid">
+    <div class="avail-card"><div class="avail-dot green"></div><div class="avail-text"><b>Dic 2025 (FY)</b><br>Completo — Utilidades, market share, morosidad, ROE, capital</div></div>
+    <div class="avail-card"><div class="avail-dot yellow"></div><div class="avail-text"><b>Enero 2026</b><br>Parcial — Utilidades por banco disponibles (SBS via medios)</div></div>
+    <div class="avail-card"><div class="avail-dot red"></div><div class="avail-text"><b>Febrero 2026</b><br>No disponible — SBS publica con ~45 días de rezago. Próx. disponibilidad: ~Abr 2026</div></div>
+    <div class="avail-card"><div class="avail-dot green"></div><div class="avail-text"><b>Créditos directos Dic 2025</b><br>S/370,439mm sistema total · Verificado SBS</div></div>
+    <div class="avail-card"><div class="avail-dot green"></div><div class="avail-text"><b>Market share créditos Dic 2025</b><br>BCP 33.4% · BBVA 22.1% · IBK 13.6% · SCOT 13.2%</div></div>
+    <div class="avail-card"><div class="avail-dot yellow"></div><div class="avail-text"><b>Indicadores dic 2024 (base comparación)</b><br>ROE sistema 15.3% · Morosidad 3.8% · RCG 17.3%</div></div>
+  </div>
+
+  <div class="sl">BCP y Mibanco (Credicorp) <span>· Dic 2025 · Fuente: SBS + Credicorp 4Q25 Earnings Release</span></div>
+  <div class="hero-row">
+    <div class="hero-card bcp-h" data-name="BCP">
+      <div class="hero-tag">BCP · Banca Múltiple</div>
+      <div class="hero-name">Banco de Crédito del Perú</div>
+      <div class="hero-sub">Subsidaria universal de Credicorp · Líder del sistema bancario peruano</div>
+      <div class="hero-kpis">
+        <div class="hk"><div class="hk-l">Utilidades FY25</div><div class="hk-v">S/6,478<sup>mm</sup></div><div class="hk-s up">↑ +24% YoY</div></div>
+        <div class="hk"><div class="hk-l">Market Share</div><div class="hk-v">33.4<sup>%</sup></div><div class="hk-s nt">Créditos dic 2025</div></div>
+        <div class="hk"><div class="hk-l">Morosidad</div><div class="hk-v">~3.2<sup>%</sup></div><div class="hk-s up">↓ Mejora YoY</div></div>
+        <div class="hk"><div class="hk-l">Util. Ene 2026</div><div class="hk-v">S/724<sup>mm</sup></div><div class="hk-s nt">48.2% del sistema</div></div>
+      </div>
+    </div>
+    <div class="hero-card mib-h" data-name="MIBANCO">
+      <div class="hero-tag">Mibanco · Microfinanzas</div>
+      <div class="hero-name">Mibanco</div>
+      <div class="hero-sub">Subsidaria de Credicorp · Líder microcrédito LatAm · ROE FY25: 16.6%</div>
+      <div class="hero-kpis">
+        <div class="hk"><div class="hk-l">Créditos dic 25</div><div class="hk-v">~S/13.6<sup>bn</sup></div><div class="hk-s up">↑ +11.2% YoY</div></div>
+        <div class="hk"><div class="hk-l">Mkt Share</div><div class="hk-v">~3.6<sup>%</sup></div><div class="hk-s nt">Banca múltiple</div></div>
+        <div class="hk"><div class="hk-l">Morosidad</div><div class="hk-v">~5.7<sup>%</sup></div><div class="hk-s nt">↓ vs ~7.4% dic 23</div></div>
+        <div class="hk"><div class="hk-l">NIM FY25</div><div class="hk-v">14.6<sup>%</sup></div><div class="hk-s up">Microcrédito premium</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl">Competidores principales <span>· Banca Múltiple Perú · Dic 2025 · Fuente: SBS</span></div>
+  <div class="peer-row">
+    <div class="peer-card pc-bbva">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span class="peer-sym sym-bbva">BBVA Perú</span>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">Grupo BBVA España</span>
+      </div>
+      <div class="peer-name">2do banco del sistema · Universal banking</div>
+      <div class="peer-stats">
+        <div><div class="ps-l">Utilidades FY25</div><div class="ps-v">S/2,391mm</div></div>
+        <div><div class="ps-l">Crecim. YoY</div><div class="ps-v best">+27%</div></div>
+        <div><div class="ps-l">Mkt Share cred.</div><div class="ps-v">22.1%</div></div>
+        <div><div class="ps-l">Util. Ene 2026</div><div class="ps-v">S/250mm</div></div>
+        <div><div class="ps-l">Créditos dic 25</div><div class="ps-v">↑ +S/4,039mm</div></div>
+        <div><div class="ps-l">Morosidad aprox</div><div class="ps-v ok">~3.5%</div></div>
+      </div>
+    </div>
+    <div class="peer-card pc-ibk">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span class="peer-sym sym-ibk">Interbank</span>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">IFS · Grupo Rodríguez-Pastor</span>
+      </div>
+      <div class="peer-name">3er banco · Retail & digital · Tenemos IFS como comparable</div>
+      <div class="peer-stats">
+        <div><div class="ps-l">Utilidades FY25</div><div class="ps-v">S/1,459mm</div></div>
+        <div><div class="ps-l">Crecim. YoY</div><div class="ps-v ok">+N/D</div></div>
+        <div><div class="ps-l">Mkt Share cred.</div><div class="ps-v">13.6%</div></div>
+        <div><div class="ps-l">Util. Ene 2026</div><div class="ps-v">S/159mm</div></div>
+        <div><div class="ps-l">Cred. Dic 25</div><div class="ps-v">+crecimiento</div></div>
+        <div><div class="ps-l">Morosidad aprox</div><div class="ps-v ok">~4.0%</div></div>
+      </div>
+    </div>
+    <div class="peer-card pc-scot">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span class="peer-sym sym-scot">Scotiabank Perú</span>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)">Grupo Scotiabank Canadá</span>
+      </div>
+      <div class="peer-name">4to banco · Retroceso de portafolio en 2025</div>
+      <div class="peer-stats">
+        <div><div class="ps-l">Utilidades FY25</div><div class="ps-v">S/1,477mm</div></div>
+        <div><div class="ps-l">Crecim. YoY</div><div class="ps-v">+54%</div></div>
+        <div><div class="ps-l">Mkt Share cred.</div><div class="ps-v warn">13.2%</div></div>
+        <div><div class="ps-l">Util. Ene 2026</div><div class="ps-v">S/146mm</div></div>
+        <div><div class="ps-l">Cred. Dic 25</div><div class="ps-v warn">↓ Contracción</div></div>
+        <div><div class="ps-l">Morosidad aprox</div><div class="ps-v ok">~3.8%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sl">Ranking Utilidades Enero 2026 <span>· Fuente: SBS via La Prensa Regional · Total sistema: S/1,501.8mm</span></div>
+  <div class="rank-grid">
+    <div class="rank-card r1">
+      <div class="rank-n" style="color:#F5C842">1</div>
+      <div class="rank-info"><div class="rank-bank" style="color:var(--bcp)">BCP</div><div class="rank-val">S/724.6mm</div><div class="rank-sub">48.2% del sistema · Credicorp</div></div>
+    </div>
+    <div class="rank-card r2">
+      <div class="rank-n" style="color:#C0C0C0">2</div>
+      <div class="rank-info"><div class="rank-bank" style="color:var(--bbva)">BBVA Perú</div><div class="rank-val">S/250.3mm</div><div class="rank-sub">16.7% del sistema</div></div>
+    </div>
+    <div class="rank-card r3">
+      <div class="rank-n" style="color:#CD7F32">3</div>
+      <div class="rank-info"><div class="rank-bank" style="color:var(--ibk)">Interbank</div><div class="rank-val">S/159.4mm</div><div class="rank-sub">10.6% del sistema</div></div>
+    </div>
+    <div class="rank-card">
+      <div class="rank-n">4</div>
+      <div class="rank-info"><div class="rank-bank" style="color:var(--scot)">Scotiabank</div><div class="rank-val">S/146.0mm</div><div class="rank-sub">9.7% del sistema</div></div>
+    </div>
+    <div class="rank-card">
+      <div class="rank-n">5+</div>
+      <div class="rank-info"><div class="rank-bank" style="color:var(--mibanco)">Mibanco & Otros</div><div class="rank-val">S/221.5mm</div><div class="rank-sub">14.7% restante sistema</div></div>
+    </div>
+  </div>
+
+  <div class="sl">Vista Comparativa Rápida <span>· Dic 2025 + Ene 2026</span></div>
+  <div class="cr cr2">
+    <div class="cc bcp-a">
+      <div class="cch"><div><div class="cct">Utilidades Mensuales Ene 2026 (S/ mm)</div><div class="ccs">Fuente: SBS via medios oficiales · Total sistema S/1,501.8mm</div></div><span class="badge b-blue">Ene 2026</span></div>
+      <div class="chw h260"><canvas id="ch-util-ene"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="cch"><div><div class="cct">Utilidades FY2025 vs FY2024 (S/ mm)</div><div class="ccs">Fuente: SBS · Cierre anual verificado · Crecimiento récord del sistema</div></div><span class="badge b-gold">FY Comparativo</span></div>
+      <div class="chw h260"><canvas id="ch-util-fy"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ FINANCIEROS SBS ═══ -->
+<div class="tp" id="panel-financials">
+
+  <div class="src-note">
+    📊 <span>Todos los datos de esta pestaña extraídos de <b>SBS (sbs.gob.pe)</b> — Estadísticas de Banca Múltiple. Dic 2025 = cierre FY verificado. Ene 2026 = datos de utilidades parciales disponibles via SBS. Feb 2026 = no disponible aún.</span>
+  </div>
+
+  <div class="sl">Matriz Financiera Comparativa <span>· Banca Múltiple Perú · Fuente: SBS</span></div>
+  <div class="cc bcp-a" style="margin-bottom:1.5rem">
+    <div class="mwrap">
+      <table class="mx">
+        <thead>
+          <tr>
+            <th>Métrica</th>
+            <th class="hbcp">BCP</th>
+            <th class="hmib">Mibanco</th>
+            <th class="hbbva">BBVA Perú</th>
+            <th class="hibk">Interbank</th>
+            <th class="hscot">Scotiabank</th>
+            <th>Período</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="sr"><td colspan="7">RENTABILIDAD</td></tr>
+          <tr><td class="mn">Utilidades Netas FY2025</td><td class="bcp-col best-c">S/6,478mm</td><td class="mib-col">S/~530mm¹</td><td>S/2,391mm</td><td>S/1,459mm</td><td>S/1,477mm</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr><td class="mn">Crecim. Utilidades YoY</td><td class="bcp-col best-c">+24%</td><td class="mib-col">+N/D</td><td class="best-c">+27%</td><td>N/D</td><td>+54%²</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr><td class="mn">Utilidades Enero 2026</td><td class="bcp-col best-c">S/724.6mm</td><td class="mib-col">N/D desagregado</td><td>S/250.3mm</td><td>S/159.4mm</td><td>S/146.0mm</td><td><span class="m-badge m-ene">Ene 26</span></td></tr>
+          <tr><td class="mn">Participación sist. Ene 26</td><td class="bcp-col best-c">48.2%</td><td class="mib-col">—</td><td>16.7%</td><td>10.6%</td><td>9.7%</td><td><span class="m-badge m-ene">Ene 26</span></td></tr>
+          <tr><td class="mn">ROE (FY2025 estimado)</td><td class="bcp-col best-c">~24%</td><td class="mib-col">16.6%³</td><td>~19–20%</td><td>~17–18%</td><td>~12%</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr><td class="mn">Utilidades Febrero 2026</td><td class="bcp-col warn-c">No disponible</td><td class="mib-col warn-c">No disponible</td><td class="warn-c">No disponible</td><td class="warn-c">No disponible</td><td class="warn-c">No disponible</td><td><span class="m-badge m-nd">Feb 26</span></td></tr>
+          <tr class="sr"><td colspan="7">MARKET SHARE — CRÉDITOS DIRECTOS</td></tr>
+          <tr><td class="mn">Participación créditos dic 25</td><td class="bcp-col best-c">33.4%</td><td class="mib-col">~3.6%</td><td>22.1%</td><td>13.6%</td><td>13.2%</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr><td class="mn">Variación portafolio créditos</td><td class="bcp-col best-c">+S/4,694mm</td><td class="mib-col">+S/1,325mm³</td><td>+S/4,039mm</td><td>+N/D</td><td class="warn-c">↓ Contracción</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr><td class="mn">Nuevos deudores 2025</td><td class="bcp-col best-c">+1.2 millones</td><td class="mib-col">N/D</td><td>N/D</td><td>N/D</td><td class="warn-c">N/D</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr class="sr"><td colspan="7">CRÉDITOS DIRECTOS — SALDOS</td></tr>
+          <tr><td class="mn">Créditos directos dic 25</td><td class="bcp-col best-c">~S/123,700mm</td><td class="mib-col">~S/13,600mm³</td><td>~S/81,900mm</td><td>~S/50,300mm</td><td>~S/48,900mm</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr><td class="mn">Sistema total dic 25</td><td class="bcp-col">S/370,439mm</td><td colspan="4" style="color:var(--dim);font-style:italic;">Total sistema bancario verificado SBS</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr class="sr"><td colspan="7">CAPITAL — SOLVENCIA</td></tr>
+          <tr><td class="mn">Ratio Capital Global sistema</td><td colspan="5" style="color:var(--dim);font-style:italic;text-align:center;">~17.3% sistema (Nov 2024 SBS) — dato individual por banco no desagregado en fuentes disponibles</td><td><span class="m-badge m-dic">Dic 24</span></td></tr>
+          <tr><td class="mn">BCP CET1 (IFRS — Credicorp ER)</td><td class="bcp-col best-c">14.0%</td><td class="mib-col">17.3%</td><td>N/D público</td><td>N/D público</td><td>N/D público</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="font-size:10px;color:var(--dim);margin-top:8px;font-family:'DM Mono',monospace;line-height:1.7;">
+      ¹ Mibanco utilidades FY25 estimado basado en datos Credicorp ER 4Q25. BCP Stand-alone para market share. ² Scotiabank utilidades crecen por recuperación baja base 2024. ³ Credicorp Earnings Release 4Q25 (Mibanco). Los datos marcados N/D corresponden a información no publicada en estadísticas SBS en fuentes accesibles al 19 Mar 2026.
+    </div>
+  </div>
+
+  <div class="sl">Evolución Utilidades Mensuales Acumuladas <span>· BCP domina con 48% del sistema en Ene 2026</span></div>
+  <div class="cr cr2">
+    <div class="cc bcp-a">
+      <div class="cch"><div><div class="cct">Utilidades Ene 2026 — % del sistema</div><div class="ccs">Total sistema S/1,501.8mm · Fuente: SBS</div></div><span class="badge b-blue">Ene 26</span></div>
+      <div class="chw h260"><canvas id="ch-share-ene"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="cch"><div><div class="cct">Evolución Utilidades FY (S/ mm) — 2023 a 2025</div><div class="ccs">Fuente: SBS · Sistema bancario total</div></div></div>
+      <div class="chw h260"><canvas id="ch-evol-util"></canvas></div>
+    </div>
+  </div>
+
+  <div class="sl">ROE Comparativo Estimado <span>· FY2025 · Fuente: SBS + reportes clasificadoras + ER Credicorp</span></div>
+  <div class="cc bcp-a" style="margin-bottom:1.5rem">
+    <div class="cch"><div><div class="cct">ROE FY2025 — Banca Múltiple Perú</div><div class="ccs">BCP y Mibanco desde Credicorp ER · Peers estimados a partir de SBS y clasificadoras</div></div><span class="badge b-blue">FY 2025</span></div>
+    <div class="chw h260"><canvas id="ch-roe"></canvas></div>
+    <div style="font-size:10px;color:var(--dim);margin-top:8px;font-family:'DM Mono',monospace;">⚠ BBVA, Interbank y Scotiabank: ROE estimado basado en utilidades SBS FY25 / patrimonio aproximado. No corresponde a dato publicado directamente por la SBS en fuentes accesibles.</div>
+  </div>
+
+</div>
+
+<!-- ═══ CALIDAD CARTERA ═══ -->
+<div class="tp" id="panel-calidad">
+
+  <div class="src-note warn">
+    ⚠️ <span><b>Nota importante:</b> Los datos de morosidad y CAR por banco individual para Dic 2025 provienen de estadísticas SBS procesadas por clasificadoras de riesgo (PCR, Apoyo & Asociados) y medios especializados. Para Ene-Feb 2026 no hay datos de calidad de cartera desagregados disponibles en fuentes públicas al 19 Mar 2026.</span>
+  </div>
+
+  <div class="sl">Morosidad (Créditos Atrasados / Créditos Directos) <span>· Fuente: SBS via PCR / Medios especializados · Dic 2025</span></div>
+  <div class="cr cr2">
+    <div class="cc bcp-a">
+      <div class="cch"><div><div class="cct">Morosidad por Banco (%)</div><div class="ccs">Dic 2025 · Sistema total: ~3.2% (↓ vs 3.8% dic 2024)</div></div><span class="badge b-blue">Dic 25</span></div>
+      <div class="chw h260"><canvas id="ch-mora"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="cch"><div><div class="cct">Evolución Morosidad Sistema Banca Múltiple</div><div class="ccs">Promedio sistema · Fuente: SBS</div></div><span class="badge b-gold">Histórico</span></div>
+      <div class="chw h260"><canvas id="ch-mora-hist"></canvas></div>
+    </div>
+  </div>
+
+  <div class="sl">Cartera de Alto Riesgo (CAR) <span>· Incluye vencidos + refinanciados + reestructurados · Fuente: SBS via PCR</span></div>
+  <div class="cc" style="margin-bottom:1.5rem">
+    <div class="mwrap">
+      <table class="mx">
+        <thead>
+          <tr>
+            <th>Indicador Calidad</th>
+            <th class="hbcp">BCP</th>
+            <th class="hmib">Mibanco</th>
+            <th class="hbbva">BBVA Perú</th>
+            <th class="hibk">Interbank</th>
+            <th class="hscot">Scotiabank</th>
+            <th>Fuente/Período</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="sr"><td colspan="7">MOROSIDAD (créditos vencidos + cobranza judicial / créditos directos)</td></tr>
+          <tr><td class="mn">Morosidad Dic 2025</td><td class="bcp-col best-c">~2.7%</td><td class="mib-col">~5.7%</td><td class="best-c">~2.7%</td><td class="ok-c">~3.4%</td><td class="ok-c">~2.9%</td><td>SBS via PCR · <span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr><td class="mn">Morosidad Dic 2024 (base)</td><td class="bcp-col">~3.1%</td><td class="mib-col">~7.0%</td><td>~3.0%</td><td>~4.2%</td><td>~3.1%</td><td>SBS · <span class="m-badge m-dic">Dic 24</span></td></tr>
+          <tr><td class="mn">Variación YoY</td><td class="bcp-col best-c">−40bps</td><td class="mib-col best-c">−130bps</td><td class="best-c">−30bps</td><td class="best-c">−80bps</td><td class="best-c">−20bps</td><td>Estimado</td></tr>
+          <tr><td class="mn">Morosidad Ene/Feb 2026</td><td class="bcp-col warn-c">No disponible</td><td class="mib-col warn-c">No disponible</td><td class="warn-c">No disponible</td><td class="warn-c">No disponible</td><td class="warn-c">No disponible</td><td><span class="m-badge m-nd">Feb 26</span></td></tr>
+          <tr class="sr"><td colspan="7">CARTERA DE ALTO RIESGO (CAR)</td></tr>
+          <tr><td class="mn">CAR Sistema dic 2025</td><td colspan="5" style="color:var(--bcp);font-weight:600;">~5.3% sistema total (vs 5.7% dic 2024 · vs 6.5% jun 2024) — Fuente: SBS via PCR Sep 2025</td><td><span class="m-badge m-dic">Dic 25</span></td></tr>
+          <tr><td class="mn">Microempresas CAR</td><td class="bcp-col">~3.5%</td><td class="mib-col">~4.5%</td><td>N/D</td><td>N/D</td><td>N/D</td><td>SBS via PCR</td></tr>
+          <tr><td class="mn">Pequeña empresa CAR</td><td class="bcp-col">~12%</td><td class="mib-col ok-c">~13%</td><td>N/D</td><td>N/D</td><td>N/D</td><td>SBS via PCR</td></tr>
+          <tr class="sr"><td colspan="7">COBERTURA DE PROVISIONES</td></tr>
+          <tr><td class="mn">Cobertura prov./créditos atrasados</td><td class="bcp-col best-c">&gt;159%</td><td class="mib-col best-c">&gt;140%</td><td>~130%</td><td>~120%</td><td>~125%</td><td>Estimado SBS base · Dic 25</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sl">Segmentos de Riesgo Diferenciados <span>· BCP vs Mibanco — naturaleza de cartera distinta</span></div>
+  <div class="cr cr2">
+    <div class="cc bcp-a">
+      <div class="cch"><div><div class="cct">BCP — Morosidad por segmento</div><div class="ccs">Dic 2025 · Fuente: Credicorp ER + SBS</div></div></div>
+      <div class="chw h220"><canvas id="ch-bcp-seg"></canvas></div>
+    </div>
+    <div class="cc mib-a">
+      <div class="cch"><div><div class="cct">Mibanco — Indicadores clave calidad</div><div class="ccs">Dic 2025 · Fuente: Credicorp 4Q25 ER</div></div></div>
+      <div class="chw h220"><canvas id="ch-mib-kpi"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ MARKET SHARE ═══ -->
+<div class="tp" id="panel-mercado">
+
+  <div class="sl">Concentración del Sistema Bancario Peruano <span>· Dic 2025 · Fuente: SBS</span></div>
+  <div class="cr cr2">
+    <div class="cc bcp-a">
+      <div class="cch"><div><div class="cct">Market Share Créditos Directos (%)</div><div class="ccs">Dic 2025 · Total S/370,439mm · Fuente: SBS</div></div><span class="badge b-blue">Dic 25</span></div>
+      <div class="chw h300"><canvas id="ch-mktshare-cred"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="cch"><div><div class="cct">Concentración Utilidades FY2025 (%)</div><div class="ccs">S/14,147mm total sistema · Fuente: SBS</div></div><span class="badge b-gold">FY 25</span></div>
+      <div class="chw h300"><canvas id="ch-conc-util"></canvas></div>
+    </div>
+  </div>
+
+  <div class="sl">Evolución Market Share Créditos <span>· Tendencia 2022–2025 · Fuente: SBS</span></div>
+  <div class="cc bcp-a" style="margin-bottom:1.5rem">
+    <div class="cch"><div><div class="cct">Market Share Créditos — Tendencia histórica (%)</div><div class="ccs">BCP consolida liderazgo · BBVA estable · Scotiabank contrae · Fuente: SBS</div></div></div>
+    <div class="chw h280"><canvas id="ch-mktshare-evol"></canvas></div>
+    <div class="leg" style="margin-top:10px">
+      <div class="li"><div class="ld sq" style="background:var(--bcp)"></div>BCP</div>
+      <div class="li"><div class="ld" style="background:var(--bbva)"></div>BBVA</div>
+      <div class="li"><div class="ld" style="background:var(--ibk)"></div>Interbank</div>
+      <div class="li"><div class="ld" style="background:var(--scot)"></div>Scotiabank</div>
+      <div class="li"><div class="ld" style="background:var(--mibanco)"></div>Mibanco</div>
+    </div>
+  </div>
+
+  <div class="sl">Insight Competitivo <span>· BCP vs Peers · Análisis de posicionamiento</span></div>
+  <div class="cc" style="margin-bottom:1.5rem">
+    <div class="mwrap">
+      <table class="mx">
+        <thead>
+          <tr>
+            <th>Dimensión</th>
+            <th class="hbcp">BCP (Credicorp)</th>
+            <th class="hmib">Mibanco (Credicorp)</th>
+            <th class="hbbva">BBVA Perú</th>
+            <th class="hibk">Interbank</th>
+            <th class="hscot">Scotiabank</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mn">Posición market share cred.</td><td class="bcp-col best-c">1° (33.4%)</td><td class="mib-col">6° (~3.6%)</td><td>2° (22.1%)</td><td>3° (13.6%)</td><td>4° (13.2%)</td></tr>
+          <tr><td class="mn">Posición utilidades FY25</td><td class="bcp-col best-c">1° (S/6,478mm)</td><td class="mib-col">5°-6°</td><td>2° (S/2,391mm)</td><td>4° (S/1,459mm)</td><td>3° (S/1,477mm)</td></tr>
+          <tr><td class="mn">Foco de negocio</td><td class="bcp-col">Universal + Yape digital</td><td class="mib-col">Microcrédito LatAm líder</td><td>Universal + retail</td><td>Retail + consumo digital</td><td>Universal + retroceso</td></tr>
+          <tr><td class="mn">Propietario</td><td class="bcp-col">Credicorp (Perú)</td><td class="mib-col">Credicorp (Perú)</td><td>Grupo BBVA (España)</td><td>IFS – G. Rod-Pastor (Perú)</td><td>Scotiabank (Canadá)</td></tr>
+          <tr><td class="mn">Ventaja competitiva clave</td><td class="bcp-col">Escala + Yape 15.9M MAU</td><td class="mib-col">Microfinanzas + IA scoring</td><td>Respaldo matriz global</td><td>Ecosistema IFS + tech</td><td>Red física regional</td></tr>
+          <tr><td class="mn">Riesgo principal 2026</td><td class="bcp-col ok-c">Ciclo electoral + Bolivia</td><td class="mib-col ok-c">Morosidad MYPE</td><td class="ok-c">Selic / tipo de cambio</td><td>Morosidad consumo</td><td class="warn-c">Contracción portafolio</td></tr>
+          <tr><td class="mn">Momentum crecim. crédito 25</td><td class="bcp-col best-c">Fuerte (+S/4,694mm)</td><td class="mib-col best-c">Fuerte (+11.2%)</td><td class="best-c">Fuerte (+S/4,039mm)</td><td>Moderado</td><td class="warn-c">Negativo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ NOTAS ═══ -->
+<div class="tp" id="panel-notas">
+
+  <div class="sl">Transparencia de Datos y Metodología <span>· Documento de referencia para uso interno ARI</span></div>
+
+  <div class="nota-box" style="margin-bottom:1rem">
+    <div class="nota-title">🗂 Disponibilidad de datos SBS — Enero y Febrero 2026</div>
+    <div class="nota-body">
+      La SBS publica sus estadísticas de Banca Múltiple con un rezago aproximado de <b>45 días</b> respecto al cierre del período. Al 19 de marzo de 2026:
+      <br><br>
+      <b>✅ Dic 2025 (FY completo):</b> Disponible y verificado. Incluye utilidades por banco, market share de créditos y depósitos, concentración del sistema, e indicadores de calidad de cartera. Fuente directa: sbs.gob.pe — Estadísticas de Banca Múltiple, complementado con medios especializados (La República, La Prensa Regional, PCR Pacific Credit Rating) que citan la SBS explícitamente.
+      <br><br>
+      <b>🟡 Enero 2026:</b> Disponibles únicamente las utilidades por banco (total S/1,501.8mm), publicadas por La Prensa Regional citando SBS. <b>No disponibles aún:</b> morosidad, CAR, market share, ROE, solvencia individual por banco para enero 2026.
+      <br><br>
+      <b>🔴 Febrero 2026:</b> <b>Ningún dato disponible</b> en fuentes públicas al 19 Mar 2026. La SBS no ha publicado aún los datos de febrero. Se espera disponibilidad aproximada: segunda quincena de abril 2026.
+    </div>
+  </div>
+
+  <div class="nota-box" style="margin-bottom:1rem">
+    <div class="nota-title">📋 Fuentes específicas utilizadas en este dashboard</div>
+    <div class="nota-body">
+      <b>1. sbs.gob.pe — Estadísticas de Banca Múltiple:</b> Fuente primaria para market share de créditos y depósitos (dic 2025), concentración del sistema, ratio de capital global, e indicadores de morosidad agregados del sistema.<br><br>
+      <b>2. La República / La Prensa Regional (citando SBS):</b> Utilidades FY2025 por banco (BCP S/6,478mm, BBVA S/2,391mm, Scotiabank S/1,477mm, Interbank S/1,459mm) y utilidades enero 2026 por banco.<br><br>
+      <b>3. Credicorp Earnings Release 4Q25 (Feb 2026):</b> Datos de BCP Stand-alone y Mibanco: utilidades, NIM, NPL, CET1, eficiencia, crecimiento créditos. Estos son datos IFRS de las subsidiarias de Credicorp.<br><br>
+      <b>4. PCR Pacific Credit Rating (Sep 2025, citando SBS):</b> CAR del sistema, morosidad por segmento (microempresas, pequeña empresa, mediana empresa), market share individual por banco.<br><br>
+      <b>5. Infobae Perú / Gestión (citando SBS):</b> ROE sistema 2024 (15.3%), morosidad sistema 2024 (3.8%), datos históricos de referencia.<br><br>
+      <b>Nota sobre Mibanco:</b> Mibanco es clasificado como banco en la Banca Múltiple por la SBS (no como microfinanciera separada). Sus estadísticas individuales SBS son menos desagregadas en fuentes públicas accesibles; los datos usados provienen principalmente del Earnings Release de Credicorp.
+    </div>
+  </div>
+
+  <div class="nota-box" style="margin-bottom:1rem">
+    <div class="nota-title">⚠️ Datos estimados vs datos verificados</div>
+    <div class="nota-body">
+      Los datos marcados como <b>"estimado"</b> o <b>"~"</b> en este dashboard corresponden a:<br><br>
+      • <b>ROE por banco FY25:</b> Calculado como utilidades FY25 / patrimonio aproximado (basado en datos previos SBS). No es el ROE oficial publicado por la SBS para cada banco en dic 2025.<br><br>
+      • <b>Morosidad individual dic 25:</b> Basada en tendencias de PCR (sep 2025) y datos anteriores SBS. No verificado directamente del boletín SBS dic 2025.<br><br>
+      • <b>Market share créditos individuales dic 25:</b> BCP 33.4%, BBVA 22.1%, IBK 13.6%, SCOT 13.2% — verificado en SBS diciembre 2025 via PerúCheck/La República. Mibanco ~3.6% estimado de artículo PerúCheck que cita SBS dic 2025.<br><br>
+      • <b>Créditos directos en S/ mm por banco:</b> Calculados aplicando el market share % sobre el total del sistema (S/370,439mm). Aproximación razonable.
+    </div>
+  </div>
+
+  <div class="nota-box" style="margin-bottom:1rem">
+    <div class="nota-title">🔄 Cómo actualizar este dashboard</div>
+    <div class="nota-body">
+      <b>Para Febrero 2026:</b> La SBS publicará los datos en sbs.gob.pe → Estadísticas y Publicaciones → Estadística del Sistema Financiero → Banca Múltiple → aproximadamente segunda quincena de abril 2026.<br><br>
+      <b>Para Enero 2026 (datos completos):</b> Disponibles aproximadamente en primera quincena de marzo 2026 en sbs.gob.pe.<br><br>
+      <b>Ruta directa SBS:</b> sbs.gob.pe → Estadísticas y Publicaciones → Estadística del Sistema Financiero → Información Estadística de Banca Múltiple → seleccionar período.<br><br>
+      <b>Frecuencia de actualización sugerida para ARI:</b> Mensual post-publicación SBS. Actualización manual tomará ~30 minutos con los archivos Excel que publica la SBS directamente.
+    </div>
+  </div>
+
+  <div class="nota-box">
+    <div class="nota-title">🔗 URLs de referencia SBS</div>
+    <div class="nota-body">
+      • Banca Múltiple — Información estadística: https://www.sbs.gob.pe/app/stats/EstadisticaBoletinEstadistico.asp?p=1<br>
+      • Sistema financiero — Tasas de interés: https://www.sbs.gob.pe/app/pp/EstadisticasSAEEPortal<br>
+      • Informes de estabilidad financiera: https://www.sbs.gob.pe/estadisticas-y-publicaciones/publicaciones-/informe-de-estabilidad-del-sistema-financiero<br>
+      • Información clasificadoras de riesgo: https://extranet.sbs.gob.pe/iece/<br>
+    </div>
+  </div>
+
+</div>
+
+</main>
+
+<footer class="footer">
+  <span>Fuente principal: SBS (sbs.gob.pe) · Estadísticas Banca Múltiple · Dic 2025 + Ene 2026 (parcial) · Feb 2026: no disponible al 19 Mar 2026</span>
+  <span>Credicorp ARI · Uso interno · No es asesoría de inversión</span>
+</footer>
+
+<script>
+'use strict';
+document.querySelectorAll('.ntab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.ntab').forEach(x => x.classList.remove('a'));
+  document.querySelectorAll('.tp').forEach(x => x.classList.remove('a'));
+  t.classList.add('a');
+  document.getElementById('panel-' + t.dataset.tab).classList.add('a');
+}));
+
+Chart.defaults.color = '#9AA3B0';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 10;
+const GC = 'rgba(0,0,0,0.06)';
+
+// Colores oficiales bancos
+const C = {
+  BCP:     '#003087',
+  MIBANCO: '#E4002B',
+  BBVA:    '#004481',
+  IBK:     '#00A651',
+  SCOT:    '#EC1C24',
+  OTROS:   '#9AA3B0',
+};
+
+const tip = (c='#003087') => ({
+  backgroundColor:'#fff', borderColor:c, borderWidth:1,
+  titleColor:c, bodyColor:'#5A6478', padding:10, cornerRadius:4
+});
+
+// ── Utilidades Ene 2026 ──
+new Chart(document.getElementById('ch-util-ene'), {
+  type:'bar',
+  data:{
+    labels:['BCP','BBVA','Interbank','Scotiabank','Otros'],
+    datasets:[{
+      data:[724.6,250.3,159.4,146.0,221.5],
+      backgroundColor:[C.BCP+'CC',C.BBVA+'CC',C.IBK+'CC',C.SCOT+'CC',C.OTROS+'CC'],
+      borderRadius:4, borderWidth:0
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip(C.BCP),callbacks:{label:c=>` S/${c.raw}mm`}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#5A6478'}},y:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`S/${v}mm`},min:0,max:800}}
+  }
+});
+
+// ── Utilidades FY comparativo ──
+new Chart(document.getElementById('ch-util-fy'), {
+  type:'bar',
+  data:{
+    labels:['BCP','BBVA','Scotiabank','Interbank'],
+    datasets:[
+      {label:'FY2024', data:[5217,1886,958,934], backgroundColor:[C.BCP+'66',C.BBVA+'66',C.SCOT+'66',C.IBK+'66'], borderRadius:3, borderWidth:0},
+      {label:'FY2025', data:[6478,2391,1477,1459], backgroundColor:[C.BCP+'CC',C.BBVA+'CC',C.SCOT+'CC',C.IBK+'CC'], borderRadius:3, borderWidth:0},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:'#5A6478',boxWidth:10,font:{size:10}}},tooltip:{...tip(C.BCP),callbacks:{label:c=>` ${c.dataset.label}: S/${c.raw}mm`}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#5A6478'}},y:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`S/${v}mm`},min:0,max:7500}}
+  }
+});
+
+// ── Share utilidades Ene 2026 donut ──
+new Chart(document.getElementById('ch-share-ene'), {
+  type:'doughnut',
+  data:{
+    labels:['BCP (48.2%)','BBVA (16.7%)','Interbank (10.6%)','Scotiabank (9.7%)','Mibanco+Otros (14.7%)'],
+    datasets:[{data:[724.6,250.3,159.4,146.0,221.5],
+      backgroundColor:[C.BCP+'EE',C.BBVA+'EE',C.IBK+'EE',C.SCOT+'EE',C.OTROS+'AA'],
+      borderWidth:2, borderColor:'#fff'
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+    plugins:{legend:{position:'right',labels:{color:'#5A6478',boxWidth:12,font:{size:9},padding:8}},tooltip:{backgroundColor:'#fff',borderColor:'#D0D0D0',borderWidth:1,titleColor:'#1A1A2E',bodyColor:'#5A6478',callbacks:{label:c=>` S/${c.raw}mm`}}}
+  }
+});
+
+// ── Evolución utilidades históricas sistema total ──
+new Chart(document.getElementById('ch-evol-util'), {
+  type:'bar',
+  data:{
+    labels:['FY2022','FY2023','FY2024','FY2025'],
+    datasets:[{
+      label:'Sistema bancario total',
+      data:[9800,7500,10325,14147],
+      backgroundColor:[C.BCP+'55',C.BCP+'77',C.BCP+'99',C.BCP+'EE'],
+      borderRadius:4, borderWidth:0
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip(C.BCP),callbacks:{label:c=>` S/${c.raw}mm`}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#5A6478'}},y:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`S/${v}mm`},min:0,max:16000}}
+  }
+});
+
+// ── ROE estimado FY25 ──
+new Chart(document.getElementById('ch-roe'), {
+  type:'bar',indexAxis:'y',
+  data:{
+    labels:['BCP','BBVA Perú','Interbank','Mibanco','Scotiabank'],
+    datasets:[{
+      data:[24,19.5,17.5,16.6,12],
+      backgroundColor:[C.BCP+'CC',C.BBVA+'CC',C.IBK+'CC',C.MIBANCO+'CC',C.SCOT+'CC'],
+      borderRadius:4, borderWidth:0
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip(C.BCP),callbacks:{label:c=>` ROE est. ${c.raw}%`}}},
+    scales:{x:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`${v}%`},min:0,max:28},y:{grid:{display:false},ticks:{color:'#5A6478'}}}
+  }
+});
+
+// ── Morosidad dic 25 ──
+new Chart(document.getElementById('ch-mora'), {
+  type:'bar',
+  data:{
+    labels:['BCP','BBVA','Scotiabank','Interbank','Mibanco'],
+    datasets:[{
+      data:[2.7,2.7,2.9,3.4,5.7],
+      backgroundColor:[C.BCP+'CC',C.BBVA+'CC',C.SCOT+'CC',C.IBK+'CC',C.MIBANCO+'CC'],
+      borderRadius:4, borderWidth:0
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip(C.BCP),callbacks:{label:c=>` Mora: ${c.raw}%`}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#5A6478'}},y:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`${v}%`},min:0,max:7}}
+  }
+});
+
+// ── Morosidad histórica sistema ──
+new Chart(document.getElementById('ch-mora-hist'), {
+  type:'line',
+  data:{
+    labels:['Dic 20','Dic 21','Dic 22','Dic 23','Jun 24','Dic 24','Dic 25'],
+    datasets:[{
+      label:'Banca Múltiple (promedio)',
+      data:[3.0,3.8,3.5,4.4,4.4,3.8,3.2],
+      borderColor:C.BCP, backgroundColor:C.BCP+'20', borderWidth:2.5,
+      pointBackgroundColor:C.BCP, pointRadius:4, tension:.3, fill:true
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip(C.BCP),callbacks:{label:c=>` Mora sistema: ${c.raw}%`}}},
+    scales:{x:{grid:{color:GC},ticks:{color:'#9AA3B0'}},y:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`${v}%`},min:2,max:5.5}}
+  }
+});
+
+// ── BCP morosidad por segmento ──
+new Chart(document.getElementById('ch-bcp-seg'), {
+  type:'bar',indexAxis:'y',
+  data:{
+    labels:['Corporativo','Grandes Emp.','Mediana Emp.','Pequeña Emp.','Consumo','Hipotecario'],
+    datasets:[{
+      data:[0.2,0.5,3.8,12.0,3.5,1.2],
+      backgroundColor:C.BCP+'CC', borderRadius:3, borderWidth:0
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip(C.BCP),callbacks:{label:c=>` ${c.raw}%`}}},
+    scales:{x:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`${v}%`},min:0,max:14},y:{grid:{display:false},ticks:{color:'#5A6478',font:{size:9}}}}
+  }
+});
+
+// ── Mibanco KPIs ──
+new Chart(document.getElementById('ch-mib-kpi'), {
+  type:'bar',
+  data:{
+    labels:['NIM (%)','Risk-Adj NIM (%)','Morosidad (%)','CoR (%)','Eficiencia (%)'],
+    datasets:[
+      {label:'FY2025', data:[14.6,11.6,5.7,4.8,50.9], backgroundColor:C.MIBANCO+'CC', borderRadius:3, borderWidth:0},
+      {label:'FY2024 base', data:[13.8,10.7,7.0,5.5,52.0], backgroundColor:C.MIBANCO+'44', borderRadius:3, borderWidth:0},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:'#5A6478',boxWidth:10,font:{size:9}}},tooltip:{...tip(C.MIBANCO),callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}%`}}},
+    scales:{x:{grid:{display:false},ticks:{color:'#5A6478',font:{size:9}}},y:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`${v}%`},min:0,max:56}}
+  }
+});
+
+// ── Market share créditos donut ──
+new Chart(document.getElementById('ch-mktshare-cred'), {
+  type:'doughnut',
+  data:{
+    labels:['BCP (33.4%)','BBVA (22.1%)','Interbank (13.6%)','Scotiabank (13.2%)','Mibanco (3.6%)','Otros (14.1%)'],
+    datasets:[{
+      data:[33.4,22.1,13.6,13.2,3.6,14.1],
+      backgroundColor:[C.BCP+'EE',C.BBVA+'EE',C.IBK+'EE',C.SCOT+'EE',C.MIBANCO+'EE',C.OTROS+'AA'],
+      borderWidth:2, borderColor:'#fff'
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+    plugins:{legend:{position:'right',labels:{color:'#5A6478',boxWidth:12,font:{size:9},padding:8}},tooltip:{backgroundColor:'#fff',borderColor:'#D0D0D0',borderWidth:1,titleColor:'#1A1A2E',bodyColor:'#5A6478',callbacks:{label:c=>` ${c.raw}%`}}}
+  }
+});
+
+// ── Concentración utilidades donut ──
+new Chart(document.getElementById('ch-conc-util'), {
+  type:'doughnut',
+  data:{
+    labels:['BCP (45.8%)','BBVA (16.9%)','Scotiabank (10.4%)','Interbank (10.3%)','Mibanco+Otros (16.6%)'],
+    datasets:[{
+      data:[6478,2391,1477,1459,2342],
+      backgroundColor:[C.BCP+'EE',C.BBVA+'EE',C.SCOT+'EE',C.IBK+'EE',C.OTROS+'AA'],
+      borderWidth:2, borderColor:'#fff'
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+    plugins:{legend:{position:'right',labels:{color:'#5A6478',boxWidth:12,font:{size:9},padding:8}},tooltip:{backgroundColor:'#fff',borderColor:'#D0D0D0',borderWidth:1,titleColor:'#1A1A2E',bodyColor:'#5A6478',callbacks:{label:c=>` S/${c.raw}mm`}}}
+  }
+});
+
+// ── Market share evolución ──
+new Chart(document.getElementById('ch-mktshare-evol'), {
+  type:'line',
+  data:{
+    labels:['Dic 22','Dic 23','Jun 25','Dic 25'],
+    datasets:[
+      {label:'BCP', data:[34.0,33.8,34.0,33.4], borderColor:C.BCP, backgroundColor:C.BCP+'15', borderWidth:3, pointRadius:4, tension:.3, fill:true},
+      {label:'BBVA', data:[26.0,25.0,21.5,22.1], borderColor:C.BBVA, backgroundColor:'transparent', borderWidth:2, pointRadius:3, tension:.3, borderDash:[4,3]},
+      {label:'Interbank', data:[16.0,13.9,13.8,13.6], borderColor:C.IBK, backgroundColor:'transparent', borderWidth:2, pointRadius:3, tension:.3, borderDash:[4,3]},
+      {label:'Scotiabank', data:[15.0,14.0,13.9,13.2], borderColor:C.SCOT, backgroundColor:'transparent', borderWidth:2, pointRadius:3, tension:.3, borderDash:[2,3]},
+      {label:'Mibanco', data:[3.5,3.5,3.6,3.6], borderColor:C.MIBANCO, backgroundColor:'transparent', borderWidth:1.5, pointRadius:3, tension:.3, borderDash:[2,3]},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:true,labels:{color:'#5A6478',boxWidth:10,font:{size:10}}},tooltip:{...tip(C.BCP),callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}%`}}},
+    scales:{x:{grid:{color:GC},ticks:{color:'#9AA3B0'}},y:{grid:{color:GC},ticks:{color:'#9AA3B0',callback:v=>`${v}%`},min:0,max:40}}
+  }
+});
+</script>
+</body>
+</html>
